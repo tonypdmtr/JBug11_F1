@@ -1,0 +1,107 @@
+* JBug11 Project File. Do NOT edit manually
+
+
+[GENERAL]
+MCU type = 11F1
+Bytes to List = 0
+Lines to Unassemble = 0
+Auto Connect at start up = FALSE
+Auto Reset after Connect = FALSE
+Warn on BPROT not set = TRUE
+Warn on Vprog not set = FALSE
+Boot talker without break handshake = FALSE
+Ignore echo errors on write = FALSE
+68HC11 Control Registers=[JBug11]\Registers\Regs_HC11F1.csv
+68HC11 Opcodes=[JBug11]\Opcodes\HC11_Opcodes.csv
+
+[COM PORT]
+COM port to use = COM1
+MCU Crystal Frequency = 16.0000
+Upload Baud rate = 2400
+Communication Baud rate = 19200
+Remote reset available = FALSE
+Reset uses DTR = FALSE
+Reset pulse goes pos = FALSE
+Remote switch available = FALSE
+Switch is ON when positive = FALSE
+
+[MACRO & SYMBOL]
+Run Script = 2
+Boot macro script = R HPRIO=E5|R BPROT=00|R CONFIG=0F|R CSSTRH=00|R CSGADR=00|R CSGSIZ=01|R CSCTL=45|
+Has associated macro = FALSE
+Disable AUTOSTART macros = FALSE
+Abort on format error = FALSE
+Abort on command fail = FALSE
+
+[DEBUG]
+Add spaces at code breaks = FALSE
+Disable vector substitution = FALSE
+No stopping in step-over routines = FALSE
+Show instruction at start = FALSE
+Show registers at start = FALSE
+Show start info only once = FALSE
+Show instruction at break = FALSE
+Show registers at break = FALSE
+Symbol table to use = 0
+Fixed symbol table=
+
+[TALKERS]
+Talker type = 1
+Wait for echo = FALSE
+RAM-resident talker=[JBug11]\ASPiSYS\jbug.boo
+RAM talker map file=[JBug11]\ASPiSYS\jbug.exp
+EEPROM talker map file=
+External talker map file=
+Booting for external talker = 0
+
+[OVERLAYS]
+EEPROM programming overlay=[JBug11]\ASPiSYS\ee_f1.rec
+EPROM programming overlay=
+External byte write overlay=[JBug11]\ASPiSYS\at28c256.rec
+External page write overlay=[JBug11]\ASPiSYS\at28c256.rec
+
+[MEMORY MAP]
+RAM memory = 0000..03FF
+Control Register memory = 1000..105F
+Mask ROM memory = BF00..BFFF
+EEPROM memory = 0E00..0FFF
+EPROM memory =
+External RAM memory = 0400..0DFF|1060..7FFF
+External byte-written memory = 8000..FFFF
+External page-written memory = 8000..FFFF
+Mask ROM visible = FALSE
+EEPROM visible = TRUE
+EPROM visible = FALSE
+External RAM visible = TRUE
+Byte-written memory visible = FALSE
+Page-written memory visible = TRUE
+FLASH data page size = 64
+Writes are always whole page = FALSE
+
+[INDIRECT MEMORY]
+Indirect memory registers=
+Indirect memory allocation =
+Indirect memory visible = FALSE
+Indirect memory page size = 0
+Indirect memory access overlay=
+Indirect register access overlay=
+
+[FILES]
+Last loaded S19=C:\temp\command.rec
+Last loaded binary=
+Last opened macro=
+
+[WATCH WINDOW]
+Watch window addresses =
+
+[TERMINAL]
+Inter-character delay time = 0
+Show non-displayable chars = FALSE
+Local echo on = FALSE
+Send bytes on <Enter> = FALSE
+Bytes to send on <Enter> =
+Bytes to trigger newline =
+Bytes to trigger TW closure =
+Logging active = FALSE
+Terminal log file=
+Terminal send image file=
