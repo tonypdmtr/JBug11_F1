@@ -13,7 +13,7 @@ Note: If you make changes to any of the source code of either talker, run MAKE
 
 2. Copy all files from the distribution ZIP file into that directory.
 
-3. Run MAKE (*only* if any of the .ASM source files were updated).
+3. Run MAKE ALL (*only* if any of the .ASM source files were updated).
 
 4. Goto JBug11's menu "Settings" and adjust/enable only the following options:
    (What is not mentioned you should leave as is)
