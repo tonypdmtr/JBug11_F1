@@ -73,7 +73,7 @@ EnableBootROM       macro
 
 IntType             def       0                   ; 0 for a .BOO talker not using XIRQ
                                                   ; 1 for a .XOO talker using XIRQ
-MHZ                 def       8                   ; default MCU crystal speed (MHz)
+MHZ                 def       16                  ; default MCU crystal speed (MHz)
 BUS_MHZ             def       MHZ/4               ; default MCU bus speed (MHz)
 BUS_KHZ             def       BUS_MHZ*1000        ; default MCU bus speed (KHz)
 
@@ -107,7 +107,7 @@ STACKTOP            def       ~2~
                     @?        F1,$03FF            ; for F1
 
           #ifndef STACKTOP
-                    #Error    MCU must = A, E2, E0, E1, E9, E20, or F1
+                    #Fatal    MCU must = A, E2, E0, E1, E9, E20, or F1
           #endif
 
 ;*******************************************************************************
@@ -126,7 +126,6 @@ talker_start        def       0                   ;talker starts at beginning of
                     ldx       #REGS
                     clr       [SCCR1,x            ; Clear SCCR1, i.e. 1 start, 8 data,
                                                   ; 1 stop; and idle-line wake-up
-
 ; Load the BAUD and SCCR2 registers. BAUD is loaded with $30 for a communication
 ; rate of 9612 with an 8MHz crystal. This is the closest available rate to 9600,
 ; and quite close enough to work with the UART in PC's
@@ -160,7 +159,6 @@ talker_start        def       0                   ;talker starts at beginning of
           #endif
                     sta       [BAUD,x             ; 9600 baud. $2B is the BAUD register offset
                     stb       [SCCR2,x            ; See note above
-
           #ifz IntType
                     lda       #$40                ; CCR = - X - - - - - -
           #else                                   ; i.e. /XIRQ disabled, /IRQ enabled
@@ -252,20 +250,14 @@ SaveHPRIO           sta       HPRIO
 ; use by this talker and its overlay routines.
 
 MS_TO_DELAY         def       10                  ;msec to delay (default = 10)
-
-                    #Cycles
-
+                              #Cycles
 Delay10ms           proc
                     pshx
                     ldx       #DELAY@@            ; Set up wait loop and run
-
-                    #Cycles
-
+                              #Cycles
 Loop@@              dex                           ; [4]
                     bne       Loop@@              ; [3]
-
-                    #temp     :cycles
-
+                              #temp :cycles
                     pulx
                     rts
 
@@ -276,7 +268,8 @@ DELAY@@             equ       MS_TO_DELAY*BUS_KHZ-:cycles-:ocycles/:temp
 ; command with $BE
 ; This implies original memory write command is $41
 
-RxSrv1              cmpa      #CMD_WRITE_BYTE^NOT ; If unrecognised command received simply return
+RxSrv1              proc
+                    cmpa      #CMD_WRITE_BYTE^NOT ; If unrecognised command received simply return
                     bne       NullSrv             ; i.e. branch to an RTI
 RxSrv1_EndOvr       equ       *-1                 ; marks the end of this overlaid section
 
@@ -307,7 +300,8 @@ NullSrv             rti
 ; Input  : None
 ; Output : B = received byte
 
-InSCI               ldb       SCSR                ; Load B from the SCI status register
+InSCI               proc
+Loop@@              ldb       SCSR                ; Load B from the SCI status register
 
 ; Test B against $0A, %00001010, for a 'break' character being received.
 ; If a 'break' character is received, then the OR and/or FE flags will be set
@@ -336,7 +330,7 @@ InSCI               ldb       SCSR                ; Load B from the SCI status r
           ; 0     (always reads zero)             = ?
 
                     andb      #$20                ; If RDRF not set then
-                    beq       InSCI               ; listen for char from host
+                    beq       Loop@@              ; listen for char from host
 
           ; Read data received from host and return it in B
 
@@ -349,12 +343,12 @@ InSCI               ldb       SCSR                ; Load B from the SCI status r
 ; Output : None
 
 OutSci              proc
-                    tst       SCSR                ; Load A from the SCI status register
+Loop@@              tst       SCSR                ; Load A from the SCI status register
 
           ; If TDRE, the Transmit Data Register Empty flag is not set then loop round.
           ; Not by chance, the TDRE flag is the msb of the SCI status register
 
-                    bpl       OutSci
+                    bpl       Loop@@
                     sta       SCDR                ; Send byte
                     rts
 
@@ -396,7 +390,7 @@ ReadReg@@           tsx                           ; Store stack pointer in IX
           ; of the command would be $3E (command = $C1)
 
 WriteReg@@          cmpa      #CMD_WRITE_REG^NOT  ; If not $3E then
-                    bne       SwiSrv1             ; Maybe to service an SWI?
+                    bne       SwiSrv@@            ; Maybe to service an SWI?
 
 ;-------------------------------------------------------------------------------
 ; WRITE REGISTERS
@@ -422,31 +416,36 @@ WriteReg@@          cmpa      #CMD_WRITE_REG^NOT  ; If not $3E then
 ; Breakpoints generated by SWI instructions cause this routine to run
 ; The code $4A is sent to the host as a signal that a breakpoint has been reached
 
-swi_srv             lda       #CMD_SWI_REPLY
+swi_srv             proc
+                    lda       #CMD_SWI_REPLY
                     bsr       OutSci
+;                   bra       SWIidle
+                    endp
 
 ;*******************************************************************************
 ; Now enter idle loop until the acknowledge signal is received from the host (also $4A)
 
-SWIidle             equ       *
+SWIidle             proc
+Loop@@
           #ifz IntType
                     cli                           ; Enable interrupts
           #else
                     sei                           ; Disable interrupts (except /XIRQ)
           #endif
-                    bra       SWIidle
+                    bra       Loop@@
+                    endp
 
 ;*******************************************************************************
 ; If command from host is an acknowledgement of breakpoint ($B5 complemented, = $4A),
 ; then the stack pointer is unwound 9 places, ie to where it was before the host
 ; acknowledged the SWI
 
-SwiSrv1             cmpa      #CMD_SWI^NOT
+SwiSrv@@            cmpa      #CMD_SWI^NOT
                     bne       NullSrv             ; branch to $0058 (NullSrv).
                                                   ; If not $4A then simply return
-;-------------------------------------------------------------------------------
-; HOST SERVICE SWI
-;-------------------------------------------------------------------------------
+          ;---------------------------------------------------------------------
+          ; HOST SERVICE SWI
+          ;---------------------------------------------------------------------
 
                     tsx                           ; Copy stack pointer to IX
                     ldb       #9                  ; Load B with 9
@@ -489,6 +488,8 @@ SwiSrv1             cmpa      #CMD_SWI^NOT
 ; Unlabelled interrupts all point to NullSrv which is an RTI instruction.
 ;*******************************************************************************
 
+                    #push
+                    #OptRelOff
                     #VECTORS
                     org       VECTORS
 
@@ -513,6 +514,7 @@ illop_jmp           equ       *-2,2               ; label refers to address
                     org       $FFFE
                     dw        talker_start
           #endif
+                    #pull
 
 ;*******************************************************************************
 ; Export needed symbols to the .EXP file (which will also be used as a MAP file)

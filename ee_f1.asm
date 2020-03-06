@@ -16,12 +16,12 @@
 
 RxSrv1              def       $003E
 RxSrv1_EndOvr       def       RxSrv1+3
-                    #Memory   RxSrv1 RxSrv1_EndOvr ; free for overlay routine
+                    #MEMORY   RxSrv1 RxSrv1_EndOvr ; free for overlay routine
 
 NullSrv             def       $0058
 InSCI               def       $0059
 Inh1                def       $0075               ; Inh1 to ...
-                    #Memory   Inh1 VECTORS-1      ; ... $C3 free for overlay routine
+                    #MEMORY   Inh1 VECTORS-1      ; ... $C3 free for overlay routine
 
 REGS                def       $1000
 SCDR                def       REGS+$2F
@@ -51,6 +51,7 @@ RxSrv2              proc
                     bne       NullSrv
 
                     tba                           ; Transfer byte count to A
+;                   bra       TWritEE
 
 ;*******************************************************************************
 ; At this point in the program:

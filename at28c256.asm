@@ -69,13 +69,13 @@ VECTORS             def       $00C4               ; bootstrap redirected vectors
 
 RxSrv1              def       $003E
 RxSrv1_EndOvr       def       RxSrv1+3
-                    #Memory   RxSrv1 RxSrv1_EndOvr ; free for overlay routine
+                    #MEMORY   RxSrv1 RxSrv1_EndOvr ; free for overlay routine
 
 NullSrv             def       $0058
 InSCI               def       $0059
 
 Inh1                def       $0075               ; Inh1 to ...
-                    #Memory   Inh1 VECTORS-1      ; ... $C3 free for overlay routine
+                    #MEMORY   Inh1 VECTORS-1      ; ... $C3 free for overlay routine
 
 REGS                def       $1000
 SCDR                def       REGS+$2F
@@ -121,13 +121,12 @@ SDP                                               ;Enable Software Data Protecti
 RxSrv2              proc
           ;--- next 2 lines can go if we run out of room for more important things
                     cmpa      #CMD_WRITE_EXTBYTE^NOT        ; is it byte-write command?
-                    beq       Go                            ; yes, go (same as page)
+                    beq       Go@@                          ; yes, go (same as page)
           ;---
-
                     cmpa      #CMD_WRITE_EXTPAGE^NOT        ; is it (not) a page-write command?
                     bne       NullSrv
 
-Go                  tba                           ; Transfer byte count to A
+Go@@                tba                           ; Transfer byte count to A
 
                     psha                          ; Save byte-counter on stack
                     ldy       #RecBuf             ; Base of buffer for incoming data
@@ -137,12 +136,12 @@ Go                  tba                           ; Transfer byte count to A
           ; IX = Write address
           ; IY = Base address of buffer
 
-TWriteEE            bsr       InSCI               ; Read byte (byte returns in B)
+TWriteEE@@          bsr       InSCI               ; Read byte (byte returns in B)
                     stb       ,y                  ; Store byte to buffer
                     stb       SCDR                ; Echo back to host.
                     iny
                     deca
-                    bne       TWriteEE            ; Get next byte
+                    bne       TWriteEE@@          ; Get next byte
 
           ; If the EEPROM memory has Software Data Protection enabled, then
           ; instructions may be inserted here to write the necessary un-lock
@@ -150,7 +149,6 @@ TWriteEE            bsr       InSCI               ; Read byte (byte returns in B
           ; The codes required by Atmel's 28C256 chip are shown below:
 
                     @DisableBootROM
-
           #ifdef SDP
                     ldd       #$AAA0              ; A = $AA, B = $A0
                     sta       EepromBase+$5555
@@ -164,12 +162,12 @@ TWriteEE            bsr       InSCI               ; Read byte (byte returns in B
                     pula                          ; Restore byte count
 
                     ldy       #RecBuf             ; Point again to source buffer
-NextByte            ldb       ,y                  ; Load byte from source buffer
+NextByte@@          ldb       ,y                  ; Load byte from source buffer
                     stb       ,x                  ; Store to destination address
                     inx                           ; Destination pointer + 1
                     iny                           ; Source pointer + 1
                     deca
-                    bne       NextByte            ; All bytes of record have been written?
+                    bne       NextByte@@          ; All bytes of record have been written?
 
                     @EnableBootROM
 
@@ -183,22 +181,22 @@ NextByte            ldb       ,y                  ; Load byte from source buffer
 
 ;*******************************************************************************
 ; Interaction with the outside world:
-
+;
 ;      Writing page-written memory:
-
+;
 ;      1.      Host sends $22
 ;      2.      MCU replies with $DD (one's complement of $22)
 ;      3.      Host sends byte count ($00 to $FF)
-
+;
 ; Note that the byte count must be less than or equal to the page length,
 ; and must be chosen in conjunction with the starting address so that all
 ; bytes to be written lie within a single page (this is handled
 ; automatically by JBug11)
-
+;
 ;      4.      Host sends high byte of starting address in EEPROM
 ;      5.      Host sends low byte of the address
-
+;
 ;      6.      Host sends first byte of data for EEPROM
 ;      7.      MCU acknowledges by echoing same byte
-
+;
 ;      8.      Repeat 6 & 7 until all data bytes sent
