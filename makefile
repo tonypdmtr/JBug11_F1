@@ -1,9 +1,9 @@
 ################################################################################
 # Makefile for JBug11 talker and overlay for the F1 Board
-# Using Borland MAKE v5.41
+# Using Borland MAKE v5.43
 ################################################################################
 
-OPTS = -s+ -l- -m-
+O = -s+ -l- -m- $(O)
 
 HELP:
  @echo "*********************************************************
@@ -14,9 +14,9 @@ HELP:
  @echo "*********************************************************
 
 !ifdef MHZ
-OPTS = $(OPTS) -dMHZ=$(MHZ)
+O = -dMHZ=$(MHZ) $(O)
 !else
-OPTS = $(OPTS) -dMHZ=16
+O = -dMHZ=16 $(O)
 !endif
 
 ################################################################################
@@ -24,24 +24,19 @@ all: jbug.boo at28c256.rec ee_f1.rec
 ################################################################################
 
 jbug.boo: jbug.exp
- @asm11 $(OPTS) jbug.asm -exp+
+ @asm11 $(O) jbug.asm -exp+
  @exbin -t jbug.s19
  @copy jbug.bin jbug.boo
  @del jbug.s19 jbug.bin
 
 jbug.exp: jbug.asm
- @asm11 $(OPTS) jbug.asm -exp+
- @m jbug.exp -r -ftalker_start -ftalker_idle -fswi_srv -fswi_jmp -fillop_jmp > jbug.map
+ @asm11 $(O) jbug.asm -exp+
+ @m jbug.exp -r+ -ftalker_start -ftalker_idle -fswi_srv -fswi_jmp -fillop_jmp -l- > jbug.map
  @sr -f" set " -r jbug.map
  @sr -f,%d+ -r jbug.map
 
-
 at28c256.rec: at28c256.asm jbug.exp
- @asm11 $(OPTS) at28c256.asm
- @copy at28c256.s19 at28c256.rec
- @del at28c256.s19
+ @asm11 $(O) at28c256.asm -b$@
 
 ee_f1.rec: ee_f1.asm jbug.exp
- @asm11 $(OPTS) ee_f1.asm
- @copy ee_f1.s19 ee_f1.rec
- @del ee_f1.s19
+ @asm11 $(O) ee_f1.asm -b$@
