@@ -1,13 +1,13 @@
 To use JBug11 v5.2.1.0912 (and, possibly, later ones) with the ASPiSYS F1 Board:
-(Last updated on 2011.02.18 by Tony G. Papadimitriou <tonyp@acm.org>)
+(Last updated on 2021.12.24 by Tony G. Papadimitriou <tonyp@acm.org>)
 
 *** THIS IS AN IMPROVED VERSION AUTOMATICALLY TAKING CARE OF BOOTSTRAP ROM ***
-(All talkers are rewritten for ASM11 v8.00+ so that they can be easily altered
+(All talkers are rewritten for ASM11 v12.12+ so that they can be easily altered
 and automatically linked together based on the produced .EXP file of the main
 talker.  This makes altering the source code of the talkers a lot simpler.)
 
 Note: If you make changes to any of the source code of either talker, run MAKE
-      (Borland MAKE v5.2+) to recreate the needed files before proceeding.
+      (Borland MAKE v5.43+) to recreate the needed files before proceeding.
 
 1. Create a new subdirectory under JBug11 installation, called ASPiSYS
 
